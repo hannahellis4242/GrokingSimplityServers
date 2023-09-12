@@ -1,31 +1,23 @@
 import express, { json } from "express";
-import { z } from "zod";
 import routes from "./routes/routes";
+import { configSchema } from "./config";
 
-const envSchema = z.object({
-  PORT: z.coerce.number().int().min(1025),
-});
+const configResult = configSchema.safeParse(process.env);
 
-type EnvSchemaType = z.infer<typeof envSchema>;
-
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv extends EnvSchemaType {}
-  }
-}
-
-const envServer = envSchema.safeParse(process.env);
-
-if (!envServer.success) {
-  console.error(envServer.error.issues);
+if (!configResult.success) {
+  console.error(
+    configResult.error.issues.map(({ message }) => message).join("\n")
+  );
   process.exit(1);
 }
+
+const config = configResult.data;
 
 const app = express();
 app.use(json());
 
-app.use("/", routes);
+app.use("/", routes(config));
 
-app.listen(process.env.PORT, "0.0.0.0", () => {
-  console.log("listening on port", process.env.PORT);
+app.listen(config.PORT, "0.0.0.0", () => {
+  console.log("listening on port", config.PORT);
 });
