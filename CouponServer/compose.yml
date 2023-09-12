@@ -1,0 +1,18 @@
+version: "3"
+services:
+  redis:
+    image: redis
+    restart: always
+    volumes:
+      - data:/data
+  server:
+    build: .
+    environment:
+      - PORT=5000
+    expose:
+      - 80
+    ports:
+      - 80:5000
+    restart: always
+volumes:
+  data:
