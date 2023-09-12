@@ -1,24 +1,60 @@
-import { createClient } from "redis";
-import { Either } from "typescript-monads";
+import { MongoClient, WithId } from "mongodb";
+import Coupon, { couponSchema } from "../model/Coupon";
 
-const client = createClient({
-  url: "redis://redis:6379",
-});
+const url = "mongodb://db:27017";
+const client = new MongoClient(url);
 
-const left = <L, R>(x: L) => new Either<L, R>(x, undefined);
-const right = <L, R>(x: R) => new Either<L, R>(undefined, x);
-
-export const getCoupon = async (id: string) => {
+export const readCoupon = async (id: string) => {
   try {
     await client.connect();
-    return await client.get(id);
+    const db = client.db("groking");
+    const collection = db.collection("coupons");
+    const all = await collection.findOne<WithId<Coupon>>({ _id: id });
+    return all || undefined;
   } catch (e) {
     console.error(e);
     return undefined;
   } finally {
-    console.log("disconnect called");
-    client.disconnect();
+    client.close();
   }
 };
 
-export const saveCoupon = async();
+const parseCouponStr = (str: string): Coupon | undefined => {
+  const obj = JSON.parse(str);
+  const result = couponSchema.safeParse(obj);
+  if (!result.success) {
+    return undefined;
+  }
+  return result.data;
+};
+
+export const readAll = async (): Promise<WithId<Coupon>[]> => {
+  try {
+    await client.connect();
+    const db = client.db("groking");
+    const collection = db.collection("coupons");
+    const all = await collection.find<WithId<Coupon>>({}).toArray();
+    console.log(all);
+    return all;
+  } catch (e) {
+    console.error(e);
+    return [];
+  } finally {
+    client.close();
+  }
+};
+
+export const saveCoupon = async (coupon: Coupon) => {
+  try {
+    await client.connect();
+    const db = client.db("groking");
+    const collection = db.collection("coupons");
+    const inserted = await collection.insertOne(coupon);
+    return inserted.acknowledged ? inserted.insertedId : undefined;
+  } catch (e) {
+    console.error(e);
+    return undefined;
+  } finally {
+    client.close();
+  }
+};

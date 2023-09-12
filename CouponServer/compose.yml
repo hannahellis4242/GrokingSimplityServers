@@ -1,10 +1,12 @@
 version: "3"
 services:
-  redis:
-    image: redis
+  db:
+    image: mongo
     restart: always
+    ports:
+      - "27017:27017"
     volumes:
-      - data:/data
+      - data:/data/db
   server:
     build: .
     environment:
