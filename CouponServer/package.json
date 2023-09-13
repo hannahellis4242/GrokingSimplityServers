@@ -4,10 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node dist/main.js",
-    "dev": "nodemon dist/main.js",
-    "watch": "tsc -w",
-    "build": "tsc"
+    "start": "bun src/main.ts",
+    "dev": "bun --hot src/main.ts"
   },
   "keywords": [],
   "author": "",

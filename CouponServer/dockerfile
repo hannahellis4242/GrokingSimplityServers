@@ -1,10 +1,9 @@
-FROM node:current-alpine
+FROM oven/bun
 
 COPY package.json .
-RUN npm i
+RUN bun i
 
 COPY tsconfig.json .
 COPY src ./src
-RUN npx tsc
 
-CMD node dist/main.js
+CMD bun src/main.ts
